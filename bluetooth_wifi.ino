@@ -26,9 +26,11 @@ void setup() {
 
   // Receive WiFi credentials over Bluetooth
   receiveCredentials();
-  
+
   // Close Bluetooth connection
   serial.end();
+  // serialBT.end();
+  WiFi.mode(WIFI_OFF);
 
   // Connect to WiFi using received credentials
   connectToWiFi(wifiSSID, wifiPassword);
@@ -39,7 +41,7 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Lost connection to WiFi. Attempting to reconnect...");
     WiFi.disconnect();
-    delay(1000); // Wait a bit before reconnecting
+    delay(1000);  // Wait a bit before reconnecting
     connectToWiFi(wifiSSID, wifiPassword);
     if (WiFi.status() != WL_CONNECTED) {
       Serial.println("Failed to reconnect to WiFi. Restarting ESP32...");
@@ -72,8 +74,32 @@ void receiveCredentials() {
 }
 
 void connectToWiFi(String ssid, String password) {
+  // Scan for available networks and print them to the serial monitor
+  Serial.println("Scanning for WiFi networks...");
+  int n = WiFi.scanNetworks();
+  Serial.println("Scan done");
+  if (n == 0) {
+    Serial.println("No networks found");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) {
+      // Print SSID and RSSI for each network found
+      Serial.print(i + 1);
+      Serial.print(": ");
+      Serial.print(WiFi.SSID(i));
+      Serial.print(" (");
+      Serial.print(WiFi.RSSI(i));
+      Serial.println(")");
+      delay(10);
+    }
+  }
+
+
+  WiFi.disconnect();
+  delay(1000);  // Wait a bit before reconnecting
   WiFi.begin(ssid.c_str(), password.c_str());
-  
+
   delay(5000);
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -81,7 +107,7 @@ void connectToWiFi(String ssid, String password) {
   } else {
     Serial.println("Failed to connect to WiFi.");
     WiFi.reconnect();
-    delay(5000); // Wait a bit before checking connection status again
+    delay(5000);  // Wait a bit before checking connection status again
 
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("Reconnected to WiFi");
